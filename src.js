@@ -14,6 +14,8 @@ import {
 	Alert,
 } from "react-bootstrap";
 
+import { Gear } from "react-bootstrap-icons";
+
 import {
 	Chart as ChartJS,
 	CategoryScale,
@@ -220,7 +222,6 @@ function App({ course, setCourse, session, setSession }) {
 				</Button>
 				<Button
 					variant="secondary"
-					className="me-2"
 					disabled={reveal || alert?.variant == "success"}
 					onClick={() => setReveal(true)}
 				>
@@ -231,11 +232,11 @@ function App({ course, setCourse, session, setSession }) {
 				<Badge bg="danger">{session?.failure || 0}</Badge>
 				<Badge bg="secondary">{session?.shuffle?.length || 0}</Badge>
 				<Button
-					variant="secondary"
-					className="ms-2"
+					variant="link"
+					className="d-flex p-1"
 					onClick={() => setCourse("")}
 				>
-					Courses
+					<Gear />
 				</Button>
 			</Stack>
 			<Collapse
