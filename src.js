@@ -41,6 +41,29 @@ ChartJS.register(
 
 import "bootstrap/dist/css/bootstrap.min.css";
 
+const success_phrases = [
+	"Fantastic",
+	"Incredible",
+	"Unbelievable",
+	"Wonderful",
+	"Astonishing",
+	"Awesome",
+	"Brilliant",
+	"Extraordinary",
+	"Marvelous",
+	"Fabulous",
+	"Phenomenal",
+	"Spectacular",
+	"Remarkable",
+	"Sensational",
+	"Great",
+	"Miraculous",
+	"Beautiful",
+	"Magnificent",
+	"Terrific",
+	"Outstanding",
+];
+
 function storageGet(course) {
 	let dat = Date.now();
 	let ses;
@@ -104,24 +127,31 @@ function uniqSt(a) {
 		.reduce((o, a) => o + a, 0)}`;
 }
 
-function App({ course, session, setSession }) {
+function App({ course, setCourse, session, setSession }) {
 	const [open, setOpen] = useState(true);
 	const [index, setIndex] = useState(0);
 	const [selection, setSelection] = useState({});
 	const [alert, setAlert] = useState(null);
+	const [reveal, setReveal] = useState(false);
 	const itemEls = useRef(new Array());
 
 	let ptr = session?.shuffle?.[index];
 
+	let isChk = ptr?.a?.length > 1;
+	let isRad = !isChk && ptr?.c?.length > 1;
+	// let isTxt = !isChk && !isRad;
+	// console.log(ptr, { isChk, isRad, isTxt });
+	// if (!isTxt) setTimeout(() => setIndex(prev => (prev + 1) % session?.shuffle?.length));
+
 	function answerCheck() {
 		let results =
 			ptr?.c?.map((c, i) => {
-				if (ptr?.a?.length > 1) {
+				if (isChk) {
 					return (
 						itemEls?.current?.[i]?.checked ==
 						ptr?.a?.indexOf(itemEls?.current?.[i]?.value) >= 0
 					);
-				} else if (ptr?.c?.length > 1) {
+				} else if (isRad) {
 					return (
 						itemEls?.current?.[i]?.checked ==
 						ptr?.a?.indexOf(itemEls?.current?.[i]?.value) >= 0
@@ -138,36 +168,48 @@ function App({ course, session, setSession }) {
 	}
 
 	function answerButton() {
-		let result = answerCheck();
-		if (result && alert?.variant == "success") {
+		if (reveal || alert?.variant == "success") {
 			setOpen(false);
-		} else {
-			setAlert(
-				result
-					? { variant: "success", text: "Great!" }
-					: { variant: "secondary", text: "Try again." }
-			);
-			let k = result ? "success" : "failure";
-			if (!Array.isArray(session.metrics[k][ptr.uniq])) {
-				session.metrics[k][ptr.uniq] = [];
-			}
-			session.metrics[k][ptr.uniq].push(Date.now());
-			session.success = Object.keys(session.metrics["success"]).length;
-			session.failure = Object.keys(session.metrics["failure"]).length;
-			setSession((prev) => storageSet(course, Object.assign({}, session)));
+			return;
 		}
+		if (!Object.keys(selection).length) {
+			return;
+		}
+		let result = answerCheck();
+		setAlert(
+			result
+				? {
+						//
+						variant: "success",
+						text: `${
+							success_phrases[(success_phrases.length * Math.random()) | 0]
+						}!`,
+				  }
+				: {
+						//
+						variant: "secondary",
+						text: "Try again.",
+				  }
+		);
+		let k = result ? "success" : "failure";
+		if (!Array.isArray(session.metrics[k][ptr.uniq])) {
+			session.metrics[k][ptr.uniq] = [];
+		}
+		session.metrics[k][ptr.uniq].push(Date.now());
+		session.success = Object.keys(session.metrics["success"]).length;
+		session.failure = Object.keys(session.metrics["failure"]).length;
+		setSession((prev) => storageSet(course, Object.assign({}, session)));
 	}
 
 	return (
 		<>
 			<Stack direction="horizontal" className="my-2">
-				{alert?.variant == "success" && (
-					<Button variant="success" className="me-2" onClick={answerButton}>
-						Next Question
-					</Button>
-				)}
-				<Button variant="primary" className="me-2" onClick={answerButton}>
-					Check
+				<Button
+					variant={alert?.variant == "success" ? "success" : "primary"}
+					className="me-2"
+					onClick={answerButton}
+				>
+					{reveal || alert?.variant == "success" ? "Next" : "Check"}
 				</Button>
 				<Button
 					variant="secondary"
@@ -176,10 +218,25 @@ function App({ course, session, setSession }) {
 				>
 					Skip
 				</Button>
+				<Button
+					variant="secondary"
+					className="me-2"
+					disabled={reveal || alert?.variant == "success"}
+					onClick={() => setReveal(true)}
+				>
+					Reveal
+				</Button>
 				<div className="ms-auto"></div>
 				<Badge bg="success">{session?.success || 0}</Badge>
 				<Badge bg="danger">{session?.failure || 0}</Badge>
 				<Badge bg="secondary">{session?.shuffle?.length || 0}</Badge>
+				<Button
+					variant="secondary"
+					className="ms-2"
+					onClick={() => setCourse("")}
+				>
+					Courses
+				</Button>
 			</Stack>
 			<Collapse
 				in={open}
@@ -187,6 +244,7 @@ function App({ course, session, setSession }) {
 					setIndex((prev) => {
 						setOpen(true);
 						setAlert(null);
+						setReveal(false);
 						setSelection({});
 						return (prev + 1) % session?.shuffle?.length;
 					})
@@ -196,7 +254,7 @@ function App({ course, session, setSession }) {
 					<div className="py-5">{ptr?.q}</div>
 					<div className="d-grid gap-2">
 						{ptr?.c?.map((c, i) => {
-							if (ptr?.a?.length > 1) {
+							if (isChk) {
 								return (
 									<div key={i}>
 										<input
@@ -204,16 +262,25 @@ function App({ course, session, setSession }) {
 											ref={(e) => (itemEls.current[i] = e)}
 											value={c}
 											checked={!!selection?.[i]}
+											disabled={reveal}
 											onChange={(ev) =>
 												setSelection((prev) =>
 													Object.assign({}, prev, { [i]: ev.target.checked })
 												)
 											}
 										/>{" "}
-										{c}
+										<span
+											className={
+												reveal && ptr?.a?.indexOf(c) >= 0
+													? "alert alert-primary p-0 m-0"
+													: ""
+											}
+										>
+											{c}
+										</span>
 									</div>
 								);
-							} else if (ptr?.c?.length > 1) {
+							} else if (isRad) {
 								return (
 									<div key={i}>
 										<input
@@ -221,13 +288,22 @@ function App({ course, session, setSession }) {
 											ref={(e) => (itemEls.current[i] = e)}
 											value={c}
 											checked={!!selection?.[i]}
+											disabled={reveal}
 											onChange={(ev) =>
 												setSelection((prev) =>
 													Object.assign({}, { [i]: ev.target.checked })
 												)
 											}
 										/>{" "}
-										{c}
+										<span
+											className={
+												reveal && ptr?.a?.indexOf(c) >= 0
+													? "alert alert-primary p-0 m-0"
+													: ""
+											}
+										>
+											{c}
+										</span>
 									</div>
 								);
 							} else {
@@ -237,13 +313,21 @@ function App({ course, session, setSession }) {
 											type="text"
 											ref={(e) => (itemEls.current[i] = e)}
 											value={selection?.[i] || ""}
+											disabled={reveal}
 											onChange={(ev) =>
 												setSelection((prev) =>
 													Object.assign({}, prev, { [i]: ev.target.value })
 												)
 											}
 										/>{" "}
-										{c}
+										{reveal && (
+											<>
+												<span className={"alert alert-primary p-0 m-0"}>
+													{reveal && ptr?.a?.[0]}
+												</span>{" "}
+											</>
+										)}
+										<span>{c}</span>
 									</div>
 								);
 							}
@@ -285,22 +369,32 @@ function App({ course, session, setSession }) {
 							/>
 
 							<Container className="mt-3">
-								<Row>
-									<Col>
-										<h5 className="mt-2">Complete:</h5>
-										{session.metrics?.success?.[ptr?.uniq]?.map((d, idx) => (
-											<div key={idx}>{new Date(d).toLocaleString()}</div>
-										))}
-									</Col>
-								</Row>
-								<Row>
-									<Col>
-										<h5 className="mt-2">Incomplete:</h5>
-										{session.metrics?.failure?.[ptr?.uniq]?.map((d, idx) => (
-											<div key={idx}>{new Date(d).toLocaleString()}</div>
-										))}
-									</Col>
-								</Row>
+								{session.metrics?.success?.[ptr?.uniq]?.length && (
+									<Row>
+										<Col>
+											<h5 className="mt-2">Complete:</h5>
+											{session.metrics?.success?.[ptr?.uniq]
+												?.map((d) => new Date(d).toLocaleDateString())
+												.filter((d, idx, a) => idx == a.indexOf(d))
+												.map((d, idx) => (
+													<div key={idx}>{d}</div>
+												))}
+										</Col>
+									</Row>
+								)}
+								{session.metrics?.failure?.[ptr?.uniq]?.length && (
+									<Row>
+										<Col>
+											<h5 className="mt-2">Incomplete:</h5>
+											{session.metrics?.failure?.[ptr?.uniq]
+												?.map((d) => new Date(d).toLocaleDateString())
+												.filter((d, idx, a) => idx == a.indexOf(d))
+												.map((d, idx) => (
+													<div key={idx}>{d}</div>
+												))}
+										</Col>
+									</Row>
+								)}
 							</Container>
 						</div>
 					)}
@@ -313,13 +407,16 @@ function App({ course, session, setSession }) {
 const courses = ["c191", "c857"];
 
 function Boot() {
-	const [course, setCourse] = useState("");
+	const [course, setCourse] = useState(
+		() => localStorage.getItem("quiz_course") || ""
+	);
 	const [busy, setBusy] = useState(null);
 	const [session, setSession] = useState({});
 
 	useEffect(() => {
 		if (!course) return;
 		setBusy(`Fetching ${course}..`);
+		localStorage.setItem("quiz_course", course);
 		fetch(`${course}.json`)
 			.then((e) => e.json())
 			.then((e) =>
@@ -343,27 +440,41 @@ function Boot() {
 			});
 	}, [course]);
 
-	return session?.shuffle?.length ? (
+	return course && session?.shuffle?.length ? (
 		<Container>
-			<App course={course} session={session} setSession={setSession} />
+			<App
+				course={course}
+				setCourse={setCourse}
+				session={session}
+				setSession={setSession}
+			/>
 		</Container>
 	) : (
 		<Container>
-			<div className="mt-2">
-				{courses.map((c, idx) => (
-					<Button
-						key={idx}
-						className="me-2"
-						onClick={() => {
-							setCourse(c);
-							setBusy(null);
-						}}
-					>
-						{c}
-					</Button>
-				))}
-			</div>
-			{busy && (
+			<Stack direction="horizontal" className="my-2">
+				<h1>QuizSoar</h1>
+				<a
+					className="ms-auto"
+					target="_blank"
+					href="https://github.com/krwigo/quizsoar"
+				>
+					view source
+				</a>
+			</Stack>
+			<h4>Course Selection:</h4>
+			{courses.map((c, idx) => (
+				<Button
+					key={idx}
+					className="me-2"
+					onClick={() => {
+						setCourse(c);
+						setBusy(null);
+					}}
+				>
+					{c}
+				</Button>
+			))}
+			{course && busy && (
 				<Alert variant="secondary" className="mt-3">
 					{busy}
 				</Alert>
