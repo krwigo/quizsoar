@@ -131,7 +131,8 @@ function uniqSt(a) {
 
 function emitGA(i) {
 	try {
-		window.gtag("event", "quiz", { user_properties: Object.assign({}, i) });
+		// window.gtag("event", "quiz", { user_properties: Object.assign({}, i) });
+		window.gtag("event", "quiz", Object.assign({}, i));
 	} catch (err) {}
 }
 
@@ -206,7 +207,12 @@ function App({ course, setCourse, session, setSession }) {
 		session.success = Object.keys(session.metrics["success"]).length;
 		session.failure = Object.keys(session.metrics["failure"]).length;
 		setSession((prev) => storageSet(course, Object.assign({}, session)));
-		emitGA({ course: course, card: ptr, message: message });
+		emitGA({
+			//
+			course: course,
+			card_question: ptr?.q,
+			message_text: message?.text,
+		});
 	}
 
 	return (
