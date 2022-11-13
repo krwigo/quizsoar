@@ -226,6 +226,10 @@ function App({ course, setCourse, session, setSession }) {
 			course: course,
 			card_question: ptr?.q,
 			message_text: message?.text,
+			success_rate:
+				Object.keys(session.metrics?.success?.[ptr?.uniq] || [])?.length || 0,
+			failure_rate:
+				Object.keys(session.metrics?.failure?.[ptr?.uniq] || [])?.length || 0,
 		});
 	}
 
@@ -385,7 +389,6 @@ function App({ course, setCourse, session, setSession }) {
 												Object.keys(session.metrics?.failure?.[ptr?.uniq] || [])
 													?.length || 0,
 											],
-
 											backgroundColor: [
 												"rgba(75, 192, 192, 0.2)",
 												"rgba(255, 99, 132, 0.2)",
