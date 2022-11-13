@@ -390,12 +390,12 @@ function App({ course, setCourse, session, setSession }) {
 													?.length || 0,
 											],
 											backgroundColor: [
-												"rgba(75, 192, 192, 0.2)",
-												"rgba(255, 99, 132, 0.2)",
+												"rgba(25, 135, 84, 0.2)",
+												"rgba(108, 117, 125, 0.2)",
 											],
 											borderColor: [
-												"rgba(75, 192, 192, 1)",
-												"rgba(255, 99, 132, 1)",
+												"rgba(25, 135, 84, 1)",
+												"rgba(108, 117, 125, 1)",
 											],
 											borderWidth: 1,
 										},
