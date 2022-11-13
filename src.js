@@ -129,6 +129,12 @@ function uniqSt(a) {
 		.reduce((o, a) => o + a, 0)}`;
 }
 
+function emitGA(i) {
+	try {
+		window.gtag("event", "quiz", { user_properties: Object.assign({}, i) });
+	} catch (err) {}
+}
+
 function App({ course, setCourse, session, setSession }) {
 	const [open, setOpen] = useState(true);
 	const [index, setIndex] = useState(0);
@@ -178,21 +184,20 @@ function App({ course, setCourse, session, setSession }) {
 			return;
 		}
 		let result = answerCheck();
-		setAlert(
-			result
-				? {
-						//
-						variant: "success",
-						text: `${
-							success_phrases[(success_phrases.length * Math.random()) | 0]
-						}!`,
-				  }
-				: {
-						//
-						variant: "secondary",
-						text: "Try again.",
-				  }
-		);
+		let message = result
+			? {
+					//
+					variant: "success",
+					text: `${
+						success_phrases[(success_phrases.length * Math.random()) | 0]
+					}!`,
+			  }
+			: {
+					//
+					variant: "secondary",
+					text: "Try again.",
+			  };
+		setAlert(message);
 		let k = result ? "success" : "failure";
 		if (!Array.isArray(session.metrics[k][ptr.uniq])) {
 			session.metrics[k][ptr.uniq] = [];
@@ -201,6 +206,7 @@ function App({ course, setCourse, session, setSession }) {
 		session.success = Object.keys(session.metrics["success"]).length;
 		session.failure = Object.keys(session.metrics["failure"]).length;
 		setSession((prev) => storageSet(course, Object.assign({}, session)));
+		emitGA({ course: course, card: ptr, message: message });
 	}
 
 	return (
