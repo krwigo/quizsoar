@@ -260,6 +260,7 @@ function App({ course, setCourse, session, setSession }) {
 									<div key={i}>
 										<input
 											type="checkbox"
+											id={`input${i}`}
 											ref={(e) => (itemEls.current[i] = e)}
 											value={c}
 											checked={!!selection?.[i]}
@@ -270,7 +271,8 @@ function App({ course, setCourse, session, setSession }) {
 												)
 											}
 										/>{" "}
-										<span
+										<label
+											for={`input${i}`}
 											className={
 												reveal && ptr?.a?.indexOf(c) >= 0
 													? "alert alert-primary p-0 m-0"
@@ -278,7 +280,7 @@ function App({ course, setCourse, session, setSession }) {
 											}
 										>
 											{c}
-										</span>
+										</label>
 									</div>
 								);
 							} else if (isRad) {
@@ -286,6 +288,7 @@ function App({ course, setCourse, session, setSession }) {
 									<div key={i}>
 										<input
 											type="radio"
+											id={`input${i}`}
 											ref={(e) => (itemEls.current[i] = e)}
 											value={c}
 											checked={!!selection?.[i]}
@@ -296,7 +299,8 @@ function App({ course, setCourse, session, setSession }) {
 												)
 											}
 										/>{" "}
-										<span
+										<label
+											for={`input${i}`}
 											className={
 												reveal && ptr?.a?.indexOf(c) >= 0
 													? "alert alert-primary p-0 m-0"
@@ -304,7 +308,7 @@ function App({ course, setCourse, session, setSession }) {
 											}
 										>
 											{c}
-										</span>
+										</label>
 									</div>
 								);
 							} else {
@@ -312,6 +316,7 @@ function App({ course, setCourse, session, setSession }) {
 									<div key={i}>
 										<input
 											type="text"
+											id={`input${i}`}
 											ref={(e) => (itemEls.current[i] = e)}
 											value={selection?.[i] || ""}
 											disabled={reveal}
@@ -328,7 +333,7 @@ function App({ course, setCourse, session, setSession }) {
 												</span>{" "}
 											</>
 										)}
-										<span>{c}</span>
+										<label for={`input${i}`}>{c}</label>
 									</div>
 								);
 							}
