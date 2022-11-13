@@ -131,8 +131,22 @@ function uniqSt(a) {
 
 function emitGA(i) {
 	try {
-		// window.gtag("event", "quiz", { user_properties: Object.assign({}, i) });
-		window.gtag("event", "quiz", Object.assign({}, i));
+		window.gtag(
+			"event",
+			"quiz",
+			Object.assign(
+				//
+				{},
+				i,
+				{
+					user_properties: Object.assign(
+						//
+						{},
+						i
+					),
+				}
+			)
+		);
 	} catch (err) {}
 }
 
